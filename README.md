@@ -53,14 +53,25 @@ python3 -m tldr_crypto_finance.cli run-backfill /path/to/archive.mbox --source m
 
 Use this when the messages are still in Gmail and you want to pull new mail into the local database.
 
+Google links:
+
+- Create a project: [Google Cloud Console](https://console.cloud.google.com/cloud-resource-manager)
+- Project docs: [Create and manage projects](https://cloud.google.com/resource-manager/docs/creating-managing-projects)
+- Enable Gmail API: [Gmail API in Cloud Console](https://console.cloud.google.com/apis/library/gmail.googleapis.com)
+- Gmail Python quickstart: [Gmail API Python quickstart](https://developers.google.com/workspace/gmail/api/quickstart/python)
+- OAuth consent docs: [Configure OAuth consent](https://developers.google.com/workspace/guides/configure-oauth-consent)
+- OAuth branding page: [Auth Branding](https://console.cloud.google.com/auth/branding)
+- OAuth client page: [Auth Clients](https://console.cloud.google.com/auth/clients)
+
 1. Create or choose a Google Cloud project.
 2. Enable the Gmail API for that project.
 3. Configure the OAuth consent screen.
-4. Create an OAuth client ID for a Desktop app.
-5. Download the client JSON file.
-6. Put that file at `secrets/gmail_credentials.json`, or change `TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH` in `.env` to point somewhere else.
-7. Leave `TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH` as `secrets/gmail_token.json` unless you want a different location. This file is created automatically after the first successful login.
-8. Set the Gmail values in `.env`:
+4. If you are using a personal Gmail account, choose `External` and add yourself as a test user. `Internal` is for Google Workspace organization-only apps.
+5. Create an OAuth client ID with application type `Desktop app`.
+6. Download the OAuth client JSON file.
+7. Put that file at `secrets/gmail_credentials.json`, or change `TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH` in `.env` to point somewhere else.
+8. Leave `TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH` as `secrets/gmail_token.json` unless you want a different location. This file is created automatically after the first successful login.
+9. Set the Gmail values in `.env`:
 
 ```dotenv
 TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH=secrets/gmail_credentials.json
@@ -68,13 +79,15 @@ TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH=secrets/gmail_token.json
 TLDR_CRYPTO_FINANCE_GMAIL_QUERY_FILTER=label:newsletters newer_than:30d
 ```
 
+`TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH` must point to the downloaded OAuth client JSON. `TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH` does not need to exist yet.
+
 Then run:
 
 ```bash
 python3 -m tldr_crypto_finance.cli sync-gmail
 ```
 
-The first run opens a browser for OAuth and then writes the token file. Later runs reuse that token.
+The first run opens a browser for OAuth, asks for Gmail read-only access, and then writes the token file. Later runs reuse that token.
 
 ### Option 4: IMAP sync
 
