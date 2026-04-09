@@ -24,6 +24,7 @@ def _settings(tmp_path: Path) -> Settings:
         raw_data_dir=tmp_path / "raw",
         curated_data_dir=tmp_path / "curated",
         config_dir=Path(__file__).resolve().parents[1] / "configs",
+        entity_extraction_backend="heuristic",
     )
 
 

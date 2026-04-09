@@ -48,8 +48,10 @@ class Settings(BaseSettings):
     imap_folder: str = "INBOX"
 
     default_sender_filters: Annotated[list[str], NoDecode] = Field(default_factory=list)
+    entity_extraction_backend: str = "heuristic"
     zero_shot_model_name: str = "facebook/bart-large-mnli"
     embeddings_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
+    ner_model_name: str = "dslim/bert-base-NER"
 
     @field_validator("default_sender_filters", mode="before")
     @classmethod

@@ -322,6 +322,7 @@ def label_articles(
     mode: str = "rules",
     force: bool = False,
     limit: int | None = None,
+    entities_backend: str | None = None,
 ) -> dict[str, int]:
     """Label article blocks, extract entities, and update manual review items."""
 
@@ -329,6 +330,7 @@ def label_articles(
     taxonomy = load_taxonomy(settings)
     run_id = begin_run(connection, "label_articles", notes=f"mode={mode}, force={force}")
     stats = {"labeled": 0, "entities_inserted": 0, "review_items_created": 0}
+    selected_entities_backend = entities_backend or settings.entity_extraction_backend
 
     try:
         rows = _fetch_articles_to_label(connection, force=force, limit=limit)
@@ -391,7 +393,11 @@ def label_articles(
                     label.confidence,
                 ],
             )
-            for entity in extract_entities(text):
+            for entity in extract_entities(
+                text,
+                backend=selected_entities_backend,
+                ner_model_name=settings.ner_model_name,
+            ):
                 connection.execute(
                     """
                     INSERT INTO article_entities (

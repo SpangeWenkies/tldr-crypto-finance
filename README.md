@@ -12,6 +12,7 @@ Newsletter email captures what analysts, traders, researchers, and operators wer
 - BeautifulSoup handles HTML cleanup.
 - Typer provides the CLI.
 - Gmail sync is part of the default install. IMAP sync is supported for generic mailboxes. Zero-shot labeling and sentence-transformer embeddings stay behind the ML extras.
+- True NER is available through the ML extras. The recommended backend is `hybrid-ner`, which combines a real NER model with the local crypto/software heuristics.
 
 ## Setup
 
@@ -238,6 +239,25 @@ python3 -m tldr_crypto_finance.cli build-embeddings --force
 python3 -m tldr_crypto_finance.cli export-parquet
 ```
 
+If you want true NER instead of heuristic-only entity extraction, install the ML extras first:
+
+```bash
+python3 -m pip install -e ".[dev,ml]"
+```
+
+Then set these values in `.env`:
+
+```dotenv
+TLDR_CRYPTO_FINANCE_ENTITY_EXTRACTION_BACKEND=hybrid-ner
+TLDR_CRYPTO_FINANCE_NER_MODEL_NAME=dslim/bert-base-NER
+```
+
+`hybrid-ner` uses a model-backed NER pass for people, organizations, and locations, then merges that with the local rules for tickers, coins, networks, software products, and AMMs. You can also run one-off overrides with:
+
+```bash
+python3 -m tldr_crypto_finance.cli label-articles --force --entities-backend hybrid-ner
+```
+
 ## Query And Review
 
 Query the resulting article store:
@@ -282,7 +302,7 @@ If something looks wrong, inspect these first:
 
 Retrieval works in layers. `query-articles` uses SQL filters on time, topic, sender, domain, asset class, and risk type. `search-similar` ranks filtered candidates with stored embeddings when available, or a lexical fallback when they are not. `export-context` writes the results as JSON or markdown for later analysis.
 
-The default embedding backend is a hash-based vector, so the project runs without model downloads. If you install the ML extras, you can switch to sentence-transformer embeddings and zero-shot topic classification.
+The default embedding backend is a hash-based vector, so the project runs without model downloads. If you install the ML extras, you can switch to sentence-transformer embeddings, zero-shot topic classification, and true NER.
 
 ## Live Sync
 

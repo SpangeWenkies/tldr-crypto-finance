@@ -26,6 +26,7 @@ dev = [
   "ruff>=0.6",
 ]
 ml = [
+  "torch>=2.4",
   "sentence-transformers>=3.0",
   "transformers>=4.44",
 ]

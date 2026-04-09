@@ -118,6 +118,10 @@ def label_articles(
     mode: str = typer.Option("rules", help="rules, hybrid, or zero-shot"),
     force: bool = typer.Option(False, help="Relabel articles that already have labels."),
     limit: int | None = typer.Option(None, help="Optional limit on articles to label."),
+    entities_backend: str | None = typer.Option(
+        None,
+        help="Optional entity backend override: heuristic, ner, or hybrid-ner.",
+    ),
 ) -> None:
     """Label parsed article blocks and populate entity and review tables."""
 
@@ -131,6 +135,7 @@ def label_articles(
             mode=mode,
             force=force,
             limit=limit,
+            entities_backend=entities_backend,
         )
     typer.echo(json.dumps(stats, indent=2))
 
