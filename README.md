@@ -15,6 +15,7 @@ Newsletter email captures what analysts, traders, researchers, and operators wer
 
 ## Setup
 
+- The commands below assume macOS with `zsh`.
 - Create and activate a virtual environment.
 - Install the project in editable mode with the development extras.
 - Copy `.env.example` to `.env` and fill in the paths or credentials you need.
@@ -23,96 +24,94 @@ Newsletter email captures what analysts, traders, researchers, and operators wer
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[dev]"
+python3 -m pip install -e ".[dev]"
 cp .env.example .env
-python -m tldr_crypto_finance.cli init-db
+python3 -m tldr_crypto_finance.cli init-db
 ```
 
-## Quickstart
+## Getting Started
 
-- If you already have `.eml` exports, the shortest path is a full backfill:
+- Start with the setup commands above.
+
+- An `.eml` export is a directory of saved raw email files, usually exported from Mail, Gmail, Outlook, or another mail client one message per file. If you already have those files, backfill them in one command:
 
 ```bash
-python -m tldr_crypto_finance.cli run-backfill tests/fixtures --source eml
+python3 -m tldr_crypto_finance.cli run-backfill /path/to/eml_directory --source eml
 ```
 
-- Query the resulting article store:
+- If you have a mailbox archive as a single `.mbox` file instead, use:
 
 ```bash
-python -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
+python3 -m tldr_crypto_finance.cli run-backfill /path/to/archive.mbox --source mbox
 ```
 
-- Generate a short brief:
+- If you do not have local exports and the messages are still in Gmail, fill in the Gmail values in `.env` and sync directly from Gmail:
 
 ```bash
-python -m tldr_crypto_finance.cli risk-brief stablecoin --topic crypto_markets
+python3 -m tldr_crypto_finance.cli sync-gmail
 ```
 
-## How To Use
-
-- Create the environment and install dependencies:
+- If you use another mailbox over IMAP, fill in the IMAP values in `.env` and sync with:
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-python -m pip install -e ".[dev]"
+python3 -m tldr_crypto_finance.cli run-sync --no-gmail --imap
 ```
 
-- Fill in `.env` from `.env.example`. The base setup only needs the database and data directories. Gmail needs OAuth credentials. IMAP needs host, username, and password.
+- `sync-gmail` and `run-sync` add new raw messages to DuckDB. After a live sync, run the parse and labeling steps below to refresh the derived tables.
 
-- Initialize the database:
-
-```bash
-python -m tldr_crypto_finance.cli init-db
-```
-
-- Ingest mailbox exports. Use one of these:
+- If you want the manual step-by-step flow instead of `run-backfill`, use:
 
 ```bash
-python -m tldr_crypto_finance.cli ingest-eml /path/to/eml_directory
-python -m tldr_crypto_finance.cli ingest-mbox /path/to/archive.mbox
+python3 -m tldr_crypto_finance.cli ingest-eml /path/to/eml_directory
+python3 -m tldr_crypto_finance.cli ingest-mbox /path/to/archive.mbox
 ```
 
 - Parse issues into sections, article blocks, and links:
 
 ```bash
-python -m tldr_crypto_finance.cli parse-issues
+python3 -m tldr_crypto_finance.cli parse-issues
 ```
 
 - Label article blocks and extract entities:
 
 ```bash
-python -m tldr_crypto_finance.cli label-articles --force
+python3 -m tldr_crypto_finance.cli label-articles --force
 ```
 
 - Build default local embeddings for similarity search:
 
 ```bash
-python -m tldr_crypto_finance.cli build-embeddings --force
+python3 -m tldr_crypto_finance.cli build-embeddings --force
 ```
 
 - Export curated Parquet outputs:
 
 ```bash
-python -m tldr_crypto_finance.cli export-parquet
+python3 -m tldr_crypto_finance.cli export-parquet
 ```
 
-- Run a structured retrieval query:
+- Query the resulting article store:
 
 ```bash
-python -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
+python3 -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
+```
+
+- Generate a short brief:
+
+```bash
+python3 -m tldr_crypto_finance.cli risk-brief stablecoin --topic crypto_markets
 ```
 
 - Search by similarity:
 
 ```bash
-python -m tldr_crypto_finance.cli search-similar "stablecoin liquidity reserve backing" --output markdown
+python3 -m tldr_crypto_finance.cli search-similar "stablecoin liquidity reserve backing" --output markdown
 ```
 
 - Export a JSON or markdown context bundle for later analysis:
 
 ```bash
-python -m tldr_crypto_finance.cli export-context --topic crypto_markets --output json
+python3 -m tldr_crypto_finance.cli export-context --topic crypto_markets --output json
 ```
 
 - Open the notebook for exploration:
@@ -133,30 +132,30 @@ jupyter notebook notebooks/01_exploration.ipynb
 - Historical backfill from mailbox exports in one command:
 
 ```bash
-python -m tldr_crypto_finance.cli run-backfill /path/to/eml_directory --source eml
-python -m tldr_crypto_finance.cli run-backfill /path/to/archive.mbox --source mbox
+python3 -m tldr_crypto_finance.cli run-backfill /path/to/eml_directory --source eml
+python3 -m tldr_crypto_finance.cli run-backfill /path/to/archive.mbox --source mbox
 ```
 
 - Query the resulting database for recent regulation or crypto coverage:
 
 ```bash
-python -m tldr_crypto_finance.cli query-articles --topic regulation --output markdown
-python -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
+python3 -m tldr_crypto_finance.cli query-articles --topic regulation --output markdown
+python3 -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
 ```
 
 - Generate a short brief for a risk topic:
 
 ```bash
-python -m tldr_crypto_finance.cli risk-brief custody --topic crypto_markets
+python3 -m tldr_crypto_finance.cli risk-brief custody --topic crypto_markets
 ```
 
 - Incremental mailbox sync:
 
 ```bash
-python -m tldr_crypto_finance.cli sync-gmail
-python -m tldr_crypto_finance.cli run-sync
-python -m tldr_crypto_finance.cli run-sync --imap
-python -m tldr_crypto_finance.cli run-sync --no-gmail --imap
+python3 -m tldr_crypto_finance.cli sync-gmail
+python3 -m tldr_crypto_finance.cli run-sync
+python3 -m tldr_crypto_finance.cli run-sync --imap
+python3 -m tldr_crypto_finance.cli run-sync --no-gmail --imap
 ```
 
 ## Retrieval
