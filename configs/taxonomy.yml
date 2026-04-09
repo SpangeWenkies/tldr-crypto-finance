@@ -1,0 +1,69 @@
+topics:
+  macro:
+    subtopics: [inflation, labor, growth, central_banks, recession]
+  equities:
+    subtopics: [earnings, valuations, sectors, market_sentiment]
+  credit:
+    subtopics: [high_yield, investment_grade, defaults, spreads]
+  commodities:
+    subtopics: [energy, metals, agriculture]
+  crypto_markets:
+    subtopics: [stablecoins, exchanges, onchain_activity, custody]
+  regulation:
+    subtopics: [enforcement, legislation, compliance, supervision]
+  fintech:
+    subtopics: [payments, banking_software, lending, infrastructure]
+  venture:
+    subtopics: [funding, exits, private_markets, startups]
+  ai:
+    subtopics: [models, chips, enterprise_ai, policy]
+  cybersecurity:
+    subtopics: [breaches, ransomware, vulnerabilities, resilience]
+  geopolitics:
+    subtopics: [sanctions, conflict, industrial_policy, trade]
+  company_news:
+    subtopics: [management, guidance, mna, restructuring]
+  fraud_compliance:
+    subtopics: [aml, fraud, controls, investigations]
+  market_structure:
+    subtopics: [exchanges, clearing, settlement, liquidity_fragments]
+  liquidity:
+    subtopics: [funding_stress, bank_runs, collateral, market_depth]
+  rates_fx:
+    subtopics: [yield_curve, policy_rates, dollar, carry]
+
+asset_classes:
+  - macro
+  - equities
+  - credit
+  - commodities
+  - crypto
+  - rates
+  - fx
+  - private_markets
+
+risk_types:
+  - liquidity
+  - solvency
+  - regulatory
+  - operational
+  - cyber
+  - fraud
+  - market
+  - counterparty
+  - geopolitical
+
+regions:
+  - global
+  - united_states
+  - europe
+  - asia
+  - emerging_markets
+
+tones:
+  - neutral
+  - cautious
+  - bearish
+  - bullish
+  - urgent
+

@@ -1,0 +1,26 @@
+watchlists:
+  liquidity:
+    terms: [liquidity, funding stress, collateral, margin call, bank run, market depth]
+  insolvency:
+    terms: [insolvency, solvency, restructuring, default, bankruptcy]
+  regulation:
+    terms: [regulation, regulator, enforcement, rulemaking, compliance]
+  custody:
+    terms: [custody, custodian, safeguarding]
+  stablecoins:
+    terms: [stablecoin, stablecoins, usdc, tether, reserve backing]
+  exchange_risk:
+    terms: [exchange risk, exchange solvency, order book, exchange outage]
+  sanctions:
+    terms: [sanctions, ofac, export controls]
+  cyber_incidents:
+    terms: [breach, exploit, ransomware, phishing, outage]
+  fraud:
+    terms: [fraud, aml, money laundering, scam]
+  rates:
+    terms: [rates, yields, fed, ecb, tightening]
+  inflation:
+    terms: [inflation, cpi, pce, price pressures]
+  capital_controls:
+    terms: [capital controls, currency controls, transfer restrictions]
+

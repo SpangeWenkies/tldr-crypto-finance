@@ -1,0 +1,22 @@
+From: Broken Sender <broken@example.com>
+To: reader@example.org
+Subject: Broken MIME still matters
+Date: Thu, 04 Jan 2024 10:30:00 +0000
+Message-ID: <sample-newsletter-3@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="broken-boundary"
+
+--broken-boundary
+Content-Type: text/plain; charset="utf-8"
+
+Cybersecurity
+
+Exchange outage follows a malformed deployment and raises incident response questions.
+Link: https://incident.example.com/outage-story
+
+--broken-boundary
+Content-Type: text/html; charset="utf-8"
+
+<html><body><h2>Cybersecurity</h2><p>Exchange outage follows a malformed deployment.</p>
+<p><a href="https://incident.example.com/outage-story">Read</a></p>
+

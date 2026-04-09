@@ -1,0 +1,36 @@
+From: Risk Signals <alerts@example.com>
+To: reader@example.org
+Subject: Daily Risk Radar: Stablecoins and liquidity
+Date: Tue, 02 Jan 2024 08:15:00 +0000
+Message-ID: <sample-newsletter-1@example.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="risk-boundary-1"
+
+--risk-boundary-1
+Content-Type: text/plain; charset="utf-8"
+
+Markets & Business
+
+Circle publishes another reserve update and traders are watching stablecoin liquidity.
+Read more: https://example.com/reports/stablecoin-liquidity?utm_source=newsletter
+
+Sponsored
+Open an account today with a referral bonus.
+https://public.com/promo?utm_campaign=ad
+
+--risk-boundary-1
+Content-Type: text/html; charset="utf-8"
+
+<html>
+  <body>
+    <h2>Markets &amp; Business</h2>
+    <p>Circle publishes another reserve update and traders are watching stablecoin liquidity.</p>
+    <p><a href="https://example.com/reports/stablecoin-liquidity?utm_source=newsletter">Read more</a></p>
+    <p><strong>Sponsored</strong></p>
+    <p>Open an account today with a referral bonus.</p>
+    <p><a href="https://public.com/promo?utm_campaign=ad">Offer</a></p>
+  </body>
+</html>
+
+--risk-boundary-1--
+
