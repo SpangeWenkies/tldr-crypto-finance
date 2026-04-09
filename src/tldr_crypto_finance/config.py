@@ -4,11 +4,11 @@ from __future__ import annotations
 
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Annotated, Any
 
 import yaml
 from pydantic import Field, field_validator
-from pydantic_settings import BaseSettings, SettingsConfigDict
+from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
 
 def _project_root() -> Path:
@@ -47,7 +47,7 @@ class Settings(BaseSettings):
     imap_password: str = ""
     imap_folder: str = "INBOX"
 
-    default_sender_filters: list[str] = Field(default_factory=list)
+    default_sender_filters: Annotated[list[str], NoDecode] = Field(default_factory=list)
     zero_shot_model_name: str = "facebook/bart-large-mnli"
     embeddings_model_name: str = "sentence-transformers/all-MiniLM-L6-v2"
 

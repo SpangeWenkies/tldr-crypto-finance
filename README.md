@@ -16,10 +16,8 @@ Newsletter email captures what analysts, traders, researchers, and operators wer
 ## Setup
 
 - The commands below assume macOS with `zsh`.
-- Create and activate a virtual environment.
-- Install the project in editable mode with the development extras.
-- Copy `.env.example` to `.env` and fill in the paths or credentials you need.
-- Initialize the database before the first run.
+- Do these steps first, in this order.
+- You only need to fill the Gmail or IMAP values in `.env` if you choose a live sync flow later.
 
 ```bash
 python3 -m venv .venv
@@ -29,134 +27,136 @@ cp .env.example .env
 python3 -m tldr_crypto_finance.cli init-db
 ```
 
-## Getting Started
+## Choose An Input Source
 
-- Start with the setup commands above.
+### Option 1: `.eml` directory
 
-- An `.eml` export is a directory of saved raw email files, usually exported from Mail, Gmail, Outlook, or another mail client one message per file. If you already have those files, backfill them in one command:
+An `.eml` export is a directory of raw email files, usually one file per message. Mail, Gmail, Outlook, and other mail clients can export messages in this format.
+
+If you already have an `.eml` directory, this is the shortest path. `run-backfill` ingests the files and runs the downstream parse, labeling, embedding, and Parquet export steps.
 
 ```bash
 python3 -m tldr_crypto_finance.cli run-backfill /path/to/eml_directory --source eml
 ```
 
-- If you have a mailbox archive as a single `.mbox` file instead, use:
+### Option 2: `.mbox` archive
+
+An `.mbox` file is a mailbox export stored as one archive file containing many messages.
+
+If you have an `.mbox` archive instead of `.eml` files, use:
 
 ```bash
 python3 -m tldr_crypto_finance.cli run-backfill /path/to/archive.mbox --source mbox
 ```
 
-- If you do not have local exports and the messages are still in Gmail, fill in the Gmail values in `.env` and sync directly from Gmail:
+### Option 3: Gmail sync
+
+Use this when the messages are still in Gmail and you want to pull new mail into the local database.
+
+1. Create or choose a Google Cloud project.
+2. Enable the Gmail API for that project.
+3. Configure the OAuth consent screen.
+4. Create an OAuth client ID for a Desktop app.
+5. Download the client JSON file.
+6. Put that file at `secrets/gmail_credentials.json`, or change `TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH` in `.env` to point somewhere else.
+7. Leave `TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH` as `secrets/gmail_token.json` unless you want a different location. This file is created automatically after the first successful login.
+8. Set the Gmail values in `.env`:
+
+```dotenv
+TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH=secrets/gmail_credentials.json
+TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH=secrets/gmail_token.json
+TLDR_CRYPTO_FINANCE_GMAIL_QUERY_FILTER=label:newsletters newer_than:30d
+```
+
+Then run:
 
 ```bash
 python3 -m tldr_crypto_finance.cli sync-gmail
 ```
 
-- If you use another mailbox over IMAP, fill in the IMAP values in `.env` and sync with:
+The first run opens a browser for OAuth and then writes the token file. Later runs reuse that token.
+
+### Option 4: IMAP sync
+
+Use this when the messages live in another mailbox that supports IMAP.
+
+Set these values in `.env`:
+
+```dotenv
+TLDR_CRYPTO_FINANCE_IMAP_HOST=
+TLDR_CRYPTO_FINANCE_IMAP_PORT=993
+TLDR_CRYPTO_FINANCE_IMAP_USERNAME=
+TLDR_CRYPTO_FINANCE_IMAP_PASSWORD=
+TLDR_CRYPTO_FINANCE_IMAP_FOLDER=INBOX
+```
+
+Then run:
 
 ```bash
 python3 -m tldr_crypto_finance.cli run-sync --no-gmail --imap
 ```
 
-- `sync-gmail` and `run-sync` add new raw messages to DuckDB. After a live sync, run the parse and labeling steps below to refresh the derived tables.
+## Build Derived Tables
 
-- If you want the manual step-by-step flow instead of `run-backfill`, use:
+If you used `run-backfill`, this section is already done.
+
+If you used `sync-gmail` or `run-sync`, those commands only add new raw messages. Run the steps below afterward to refresh the parsed and labeled tables.
+
+If you want raw ingestion without `run-backfill`, use one of these first:
 
 ```bash
 python3 -m tldr_crypto_finance.cli ingest-eml /path/to/eml_directory
 python3 -m tldr_crypto_finance.cli ingest-mbox /path/to/archive.mbox
 ```
 
-- Parse issues into sections, article blocks, and links:
+Then run:
 
 ```bash
 python3 -m tldr_crypto_finance.cli parse-issues
-```
-
-- Label article blocks and extract entities:
-
-```bash
 python3 -m tldr_crypto_finance.cli label-articles --force
-```
-
-- Build default local embeddings for similarity search:
-
-```bash
 python3 -m tldr_crypto_finance.cli build-embeddings --force
-```
-
-- Export curated Parquet outputs:
-
-```bash
 python3 -m tldr_crypto_finance.cli export-parquet
 ```
 
-- Query the resulting article store:
+## Query And Review
+
+Query the resulting article store:
 
 ```bash
 python3 -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
 ```
 
-- Generate a short brief:
+Generate a short brief:
 
 ```bash
 python3 -m tldr_crypto_finance.cli risk-brief stablecoin --topic crypto_markets
 ```
 
-- Search by similarity:
+Search by similarity:
 
 ```bash
 python3 -m tldr_crypto_finance.cli search-similar "stablecoin liquidity reserve backing" --output markdown
 ```
 
-- Export a JSON or markdown context bundle for later analysis:
+Export a JSON or markdown context bundle:
 
 ```bash
 python3 -m tldr_crypto_finance.cli export-context --topic crypto_markets --output json
 ```
 
-- Open the notebook for exploration:
+Open the notebook:
 
 ```bash
 jupyter notebook notebooks/01_exploration.ipynb
 ```
 
-- If something looks wrong, inspect these first:
-  - `raw_messages` for ingestion problems.
-  - `newsletter_issues`, `sections`, and `article_blocks` for parse quality.
-  - `article_labels` and `manual_review_queue` for labeling gaps.
-  - `runs` for pipeline run history.
-  - `v_parse_quality_by_newsletter`, `v_low_confidence_labels`, and `v_duplicates` for targeted cleanup work.
+If something looks wrong, inspect these first:
 
-## Common Flows
-
-- Historical backfill from mailbox exports in one command:
-
-```bash
-python3 -m tldr_crypto_finance.cli run-backfill /path/to/eml_directory --source eml
-python3 -m tldr_crypto_finance.cli run-backfill /path/to/archive.mbox --source mbox
-```
-
-- Query the resulting database for recent regulation or crypto coverage:
-
-```bash
-python3 -m tldr_crypto_finance.cli query-articles --topic regulation --output markdown
-python3 -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output markdown
-```
-
-- Generate a short brief for a risk topic:
-
-```bash
-python3 -m tldr_crypto_finance.cli risk-brief custody --topic crypto_markets
-```
-
-- Incremental mailbox sync:
-
-```bash
-python3 -m tldr_crypto_finance.cli sync-gmail
-python3 -m tldr_crypto_finance.cli run-sync
-python3 -m tldr_crypto_finance.cli run-sync --imap
-python3 -m tldr_crypto_finance.cli run-sync --no-gmail --imap
-```
+- `raw_messages` for ingestion problems
+- `newsletter_issues`, `sections`, and `article_blocks` for parse quality
+- `article_labels` and `manual_review_queue` for labeling gaps
+- `runs` for pipeline run history
+- `v_parse_quality_by_newsletter`, `v_low_confidence_labels`, and `v_duplicates` for cleanup work
 
 ## Retrieval
 

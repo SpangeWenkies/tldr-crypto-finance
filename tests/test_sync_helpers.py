@@ -99,3 +99,24 @@ def test_run_sync_command_runs_gmail_by_default(
     assert result.exit_code == 0
     assert captured == {"gmail": True, "imap": False}
     assert '"inserted": 2' in result.stdout
+
+
+def test_settings_accept_empty_default_sender_filters(tmp_path: Path) -> None:
+    env_path = tmp_path / ".env"
+    env_path.write_text("TLDR_CRYPTO_FINANCE_DEFAULT_SENDER_FILTERS=\n", encoding="utf-8")
+
+    settings = Settings(_env_file=env_path)
+
+    assert settings.default_sender_filters == []
+
+
+def test_settings_split_comma_delimited_sender_filters(tmp_path: Path) -> None:
+    env_path = tmp_path / ".env"
+    env_path.write_text(
+        "TLDR_CRYPTO_FINANCE_DEFAULT_SENDER_FILTERS=alpha@example.com, beta@example.com\n",
+        encoding="utf-8",
+    )
+
+    settings = Settings(_env_file=env_path)
+
+    assert settings.default_sender_filters == ["alpha@example.com", "beta@example.com"]
