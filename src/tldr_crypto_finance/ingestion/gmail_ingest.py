@@ -1,4 +1,4 @@
-"""Optional Gmail API ingestion with checkpoint-based polling."""
+"""Gmail API ingestion with checkpoint-based polling."""
 
 from __future__ import annotations
 
@@ -16,16 +16,16 @@ from tldr_crypto_finance.ingestion.common import insert_raw_message, parse_messa
 
 
 def _build_gmail_service(settings: Settings):
-    """Create an authenticated Gmail API service object on demand."""
+    """Create an authenticated Gmail API service object."""
 
     try:
         from google.auth.transport.requests import Request
         from google.oauth2.credentials import Credentials
         from google_auth_oauthlib.flow import InstalledAppFlow
         from googleapiclient.discovery import build
-    except ImportError as exc:  # pragma: no cover - optional dependency
+    except ImportError as exc:  # pragma: no cover - environment issue
         raise RuntimeError(
-            "Gmail sync requires the optional gmail dependencies: pip install -e '.[gmail]'"
+            "Gmail sync dependencies are missing from the environment. Reinstall the project."
         ) from exc
 
     scopes = ["https://www.googleapis.com/auth/gmail.readonly"]

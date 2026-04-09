@@ -1,4 +1,8 @@
 .env
+.env.*
+!.env.example
+.envrc
+.direnv/
 .venv/
 __pycache__/
 .pytest_cache/
@@ -11,6 +15,9 @@ __pycache__/
 data/
 !data/.gitkeep
 secrets/
+gmail_credentials.json
+gmail_token.json
+oauth_credentials.json
+oauth_token.json
 *.duckdb
 *.duckdb.wal
-

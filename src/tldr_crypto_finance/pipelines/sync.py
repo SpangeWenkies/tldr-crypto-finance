@@ -16,10 +16,13 @@ def run_sync(
     settings: Settings,
     *,
     sql_dir: Path,
-    gmail: bool = False,
+    gmail: bool = True,
     imap: bool = False,
 ) -> dict[str, dict[str, int]]:
-    """Run one or both live sync sources and return per-source stats."""
+    """Run the selected live sync sources and return per-source stats."""
+
+    if not gmail and not imap:
+        raise RuntimeError("No sync sources selected. Enable Gmail or IMAP.")
 
     results: dict[str, dict[str, int]] = {}
     if gmail:

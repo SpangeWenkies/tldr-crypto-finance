@@ -285,10 +285,10 @@ def sync_imap_cmd(
 
 @app.command("run-sync")
 def run_sync_cmd(
-    gmail: bool = typer.Option(False, help="Run Gmail sync."),
-    imap: bool = typer.Option(False, help="Run IMAP sync."),
+    gmail: bool = typer.Option(True, "--gmail/--no-gmail", help="Run Gmail sync."),
+    imap: bool = typer.Option(False, "--imap/--no-imap", help="Run IMAP sync."),
 ) -> None:
-    """Run one or both live sync sources in a single command."""
+    """Run live sync sources in a single command. Gmail runs by default."""
 
     settings = get_settings()
     sql_dir = Path(__file__).resolve().parent / "db"

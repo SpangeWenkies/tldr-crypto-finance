@@ -1,17 +1,17 @@
 # TLDR Crypto Finance
 
-This repository builds a local-first pipeline for finance and crypto newsletter email. It ingests mailbox exports or live mailbox syncs, splits each issue into article-level records, filters sponsored content, assigns labels, and stores the results in DuckDB plus curated Parquet outputs.
+This repository builds a local pipeline for finance and crypto newsletter email. It ingests mailbox exports or mailbox syncs, splits each issue into article-level records, filters sponsored content, assigns labels, and stores the results in DuckDB plus Parquet outputs.
 
-Newsletter email is useful because it captures what analysts, traders, researchers, and operators were paying attention to at a specific moment. That makes it useful for idea generation, market monitoring, incident review, and risk analysis. Email also tends to preserve context that gets lost in headline feeds: framing, source links, sponsor noise, repeated narratives, and subtle changes in tone.
+Newsletter email captures what analysts, traders, researchers, and operators were paying attention to at a given time. It also preserves framing, source links, sponsor blocks, repeated narratives, and tone changes that are often lost in headline feeds.
 
 ## Why This Shape
 
-- DuckDB is the default database because it works well on a laptop, speaks SQL, and makes downstream analytics simple.
-- Parquet exports are included because many analysis tools and agent workflows prefer file-based datasets.
-- The Python standard library handles a large share of email parsing, which keeps the default path lightweight and understandable.
-- BeautifulSoup is used for HTML cleanup because newsletter markup is usually messy.
-- Typer keeps the CLI readable and easy to extend.
-- Optional zero-shot labeling, sentence-transformer embeddings, Gmail API sync, and IMAP sync are behind flags or optional dependencies so the default local path stays usable without heavy downloads or cloud services.
+- DuckDB is the default database. It runs well on a laptop and keeps querying simple.
+- Parquet exports make the data easy to inspect outside the CLI.
+- Most email parsing stays in the Python standard library.
+- BeautifulSoup handles HTML cleanup.
+- Typer provides the CLI.
+- Gmail sync is part of the default install. IMAP sync is supported for generic mailboxes. Zero-shot labeling and sentence-transformer embeddings stay behind the ML extras.
 
 ## Setup
 
@@ -30,7 +30,7 @@ python -m tldr_crypto_finance.cli init-db
 
 ## Quickstart
 
-- If you already have `.eml` exports, the shortest useful path is a full backfill:
+- If you already have `.eml` exports, the shortest path is a full backfill:
 
 ```bash
 python -m tldr_crypto_finance.cli run-backfill tests/fixtures --source eml
@@ -58,7 +58,7 @@ source .venv/bin/activate
 python -m pip install -e ".[dev]"
 ```
 
-- Fill in `.env` from `.env.example`. The default local path only needs the database and data directories. Gmail and IMAP settings are only needed for live sync.
+- Fill in `.env` from `.env.example`. The base setup only needs the database and data directories. Gmail needs OAuth credentials. IMAP needs host, username, and password.
 
 - Initialize the database:
 
@@ -79,7 +79,7 @@ python -m tldr_crypto_finance.cli ingest-mbox /path/to/archive.mbox
 python -m tldr_crypto_finance.cli parse-issues
 ```
 
-- Label article blocks and extract lightweight entities:
+- Label article blocks and extract entities:
 
 ```bash
 python -m tldr_crypto_finance.cli label-articles --force
@@ -109,13 +109,13 @@ python -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output
 python -m tldr_crypto_finance.cli search-similar "stablecoin liquidity reserve backing" --output markdown
 ```
 
-- Export a JSON or markdown context bundle for later prompting or analysis:
+- Export a JSON or markdown context bundle for later analysis:
 
 ```bash
 python -m tldr_crypto_finance.cli export-context --topic crypto_markets --output json
 ```
 
-- Open the notebook for ad hoc exploration:
+- Open the notebook for exploration:
 
 ```bash
 jupyter notebook notebooks/01_exploration.ipynb
@@ -150,30 +150,37 @@ python -m tldr_crypto_finance.cli query-articles --topic crypto_markets --output
 python -m tldr_crypto_finance.cli risk-brief custody --topic crypto_markets
 ```
 
+- Incremental mailbox sync:
+
+```bash
+python -m tldr_crypto_finance.cli sync-gmail
+python -m tldr_crypto_finance.cli run-sync
+python -m tldr_crypto_finance.cli run-sync --imap
+python -m tldr_crypto_finance.cli run-sync --no-gmail --imap
+```
+
 ## Retrieval
 
-Retrieval works in layers. `query-articles` uses SQL filters on time, topic, sender, domain, asset class, and risk type. `search-similar` ranks filtered candidates with stored embeddings when available, or a lexical fallback when they are not. `export-context` turns the results into compact JSON or markdown bundles that are easy to feed into ChatGPT, Codex, or other local analysis scripts.
+Retrieval works in layers. `query-articles` uses SQL filters on time, topic, sender, domain, asset class, and risk type. `search-similar` ranks filtered candidates with stored embeddings when available, or a lexical fallback when they are not. `export-context` writes the results as JSON or markdown for later analysis.
 
-The default embedding backend is a lightweight hash-based vector so the project runs without model downloads. If you install the optional ML extras, the codebase already has the hooks needed to switch to sentence-transformer embeddings and zero-shot topic classification.
+The default embedding backend is a hash-based vector, so the project runs without model downloads. If you install the ML extras, you can switch to sentence-transformer embeddings and zero-shot topic classification.
 
 ## Live Sync
 
-Live sync is optional. Gmail sync uses the Gmail API with OAuth tokens and a checkpoint on the last seen internal timestamp. IMAP sync uses UID checkpoints and works with ordinary IMAP servers as well as Proton Mail Bridge setups. Both modules are written as polling flows today, but the Gmail client is separated cleanly enough that push or watch support can be added later without rewriting the ingestion core.
+Gmail sync uses the Gmail API with OAuth tokens and a checkpoint on the last seen internal timestamp. IMAP sync uses UID checkpoints and works with ordinary IMAP servers as well as Proton Mail Bridge setups. `run-sync` runs Gmail by default and adds IMAP when you pass `--imap`. Both sync paths use polling.
 
 ## Architecture Notes
 
 - `src/tldr_crypto_finance/ingestion` handles MBOX, EML, Gmail, IMAP, dedupe, and checkpoints.
 - `src/tldr_crypto_finance/parsing` handles HTML cleanup, section splitting, article splitting, links, and sponsor filtering.
-- `src/tldr_crypto_finance/labeling` handles taxonomy loading, rules, optional zero-shot hooks, embeddings, and entities.
+- `src/tldr_crypto_finance/labeling` handles taxonomy loading, rules, zero-shot labeling hooks, embeddings, and entities.
 - `src/tldr_crypto_finance/retrieval` handles SQL retrieval, similarity ranking, context export, and brief generation.
 - `src/tldr_crypto_finance/db` contains the DuckDB schema and curated SQL views.
 
 ## Roadmap
 
 - Improve sender-specific parsing profiles for newsletters that need custom section or block rules.
-- Add stronger duplicate detection and clustering on top of embeddings.
-- Expand entity extraction with optional NLP backends.
+- Add stronger duplicate detection and clustering.
+- Expand entity extraction with NLP backends.
 - Add better review workflows for ambiguous sponsor cases and low-confidence labels.
-- Add richer dashboards and notebook examples on top of the curated views.
-
-This repository is also a compact Python portfolio piece. It shows practical data engineering, text parsing, local analytics, CLI design, and applied NLP in a domain where correctness, iteration speed, and maintainability matter more than flashy infrastructure.
+- Add dashboards and notebook examples on top of the curated views.
