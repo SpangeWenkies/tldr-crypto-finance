@@ -39,7 +39,7 @@ class Settings(BaseSettings):
     gmail_token_path: Path = Field(
         default_factory=lambda: _project_root() / "secrets" / "gmail_token.json"
     )
-    gmail_query_filter: str = "label:newsletters newer_than:30d"
+    gmail_query_filter: str = "after:2024/05/20"
 
     imap_host: str = ""
     imap_port: int = 993

@@ -76,10 +76,15 @@ Google links:
 ```dotenv
 TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH=secrets/gmail_credentials.json
 TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH=secrets/gmail_token.json
-TLDR_CRYPTO_FINANCE_GMAIL_QUERY_FILTER=label:newsletters newer_than:30d
+TLDR_CRYPTO_FINANCE_GMAIL_QUERY_FILTER=after:2024/05/20
+TLDR_CRYPTO_FINANCE_DEFAULT_SENDER_FILTERS=TLDR Crypto,TLDR Fintech
 ```
 
 `TLDR_CRYPTO_FINANCE_GMAIL_CREDENTIALS_PATH` must point to the downloaded OAuth client JSON. `TLDR_CRYPTO_FINANCE_GMAIL_TOKEN_PATH` does not need to exist yet.
+
+`TLDR_CRYPTO_FINANCE_GMAIL_QUERY_FILTER` is the base Gmail search. It does not assume any Gmail label. `after:2024/05/20` sets an absolute start date of May 20, 2024.
+
+`TLDR_CRYPTO_FINANCE_DEFAULT_SENDER_FILTERS` is a comma-separated list. The Gmail query builder turns it into sender clauses, so this setup keeps `TLDR Crypto` and `TLDR Fintech` while skipping other `TLDR` senders such as `TLDR AI` or `TLDR Data`.
 
 Then run:
 
@@ -107,6 +112,108 @@ Then run:
 
 ```bash
 python3 -m tldr_crypto_finance.cli run-sync --no-gmail --imap
+```
+
+## Retry Gmail Sync
+
+If a Gmail sync misses some messages after you change `.env`, you usually do not need to delete the whole database.
+
+Gmail sync stores a checkpoint and raw Gmail messages are deduplicated, so a retry can safely revisit older messages and only add the ones that were missing.
+
+The commands below assume the default database path `data/tldr_crypto_finance.duckdb`. If you changed `TLDR_CRYPTO_FINANCE_DATABASE_PATH`, use that path instead.
+
+### Case 1: Gmail missed some messages
+
+Clear only the Gmail checkpoint, then rerun the sync:
+
+```bash
+python3 - <<'PY'
+import duckdb
+
+con = duckdb.connect("data/tldr_crypto_finance.duckdb")
+con.execute("""
+    DELETE FROM sync_checkpoints
+    WHERE sync_source = 'gmail'
+      AND checkpoint_key = 'last_internal_date_ms'
+""")
+con.close()
+PY
+```
+
+Then run:
+
+```bash
+python3 -m tldr_crypto_finance.cli sync-gmail
+python3 -m tldr_crypto_finance.cli parse-issues
+python3 -m tldr_crypto_finance.cli label-articles --force
+python3 -m tldr_crypto_finance.cli build-embeddings --force
+python3 -m tldr_crypto_finance.cli export-parquet
+```
+
+### Case 2: Gmail also ingested the wrong messages
+
+If the query was too broad and you want to remove Gmail-only data before trying again, delete the Gmail checkpoint and the Gmail-derived rows:
+
+```bash
+python3 - <<'PY'
+import duckdb
+
+con = duckdb.connect("data/tldr_crypto_finance.duckdb")
+
+issue_ids = [row[0] for row in con.execute("""
+    SELECT ni.issue_id
+    FROM newsletter_issues ni
+    JOIN raw_messages rm ON rm.internal_message_pk = ni.internal_message_pk
+    WHERE rm.source_system = 'gmail'
+""").fetchall()]
+
+if issue_ids:
+    issue_q = ",".join("?" for _ in issue_ids)
+    article_ids = [row[0] for row in con.execute(
+        f"SELECT article_id FROM article_blocks WHERE issue_id IN ({issue_q})",
+        issue_ids,
+    ).fetchall()]
+
+    if article_ids:
+        article_q = ",".join("?" for _ in article_ids)
+        for table in [
+            "article_links",
+            "article_entities",
+            "article_labels",
+            "manual_review_queue",
+            "article_embeddings",
+        ]:
+            con.execute(f"DELETE FROM {table} WHERE article_id IN ({article_q})", article_ids)
+
+    con.execute(f"DELETE FROM article_blocks WHERE issue_id IN ({issue_q})", issue_ids)
+    con.execute(f"DELETE FROM sections WHERE issue_id IN ({issue_q})", issue_ids)
+    con.execute(f"DELETE FROM newsletter_issues WHERE issue_id IN ({issue_q})", issue_ids)
+
+con.execute("DELETE FROM raw_messages WHERE source_system = 'gmail'")
+con.execute("DELETE FROM sync_checkpoints WHERE sync_source = 'gmail'")
+con.execute("DELETE FROM runs WHERE pipeline_step = 'sync_gmail'")
+
+con.close()
+PY
+```
+
+After that, update `.env` if needed and run:
+
+```bash
+python3 -m tldr_crypto_finance.cli sync-gmail
+python3 -m tldr_crypto_finance.cli parse-issues
+python3 -m tldr_crypto_finance.cli label-articles --force
+python3 -m tldr_crypto_finance.cli build-embeddings --force
+python3 -m tldr_crypto_finance.cli export-parquet
+```
+
+### Case 3: Full reset
+
+Only do this if you want to throw away the entire local database, including any EML, MBOX, IMAP, and Gmail data already loaded:
+
+```bash
+rm -f data/tldr_crypto_finance.duckdb data/tldr_crypto_finance.duckdb.wal
+python3 -m tldr_crypto_finance.cli init-db
 ```
 
 ## Build Derived Tables

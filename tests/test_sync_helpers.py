@@ -27,12 +27,13 @@ def _test_settings(tmp_path: Path) -> Settings:
 def test_build_query_adds_checkpoint_and_sender_filters() -> None:
     query = _build_query(
         "label:newsletters",
-        ["risk@example.com", "macro@example.com"],
+        ["TLDR Crypto", "TLDR Fintech"],
         "1700000000000",
     )
     assert "label:newsletters" in query
     assert "after:" in query
-    assert "from:risk@example.com" in query
+    assert 'from:"TLDR Crypto"' in query
+    assert 'from:"TLDR Fintech"' in query
 
 
 def test_matches_sender_filters_is_case_insensitive() -> None:

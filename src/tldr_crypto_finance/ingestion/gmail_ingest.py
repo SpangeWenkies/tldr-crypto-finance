@@ -55,8 +55,16 @@ def _build_query(base_query: str, sender_filters: list[str], checkpoint_value: s
         timestamp_seconds = int(int(checkpoint_value) / 1000)
         parts.append(f"after:{timestamp_seconds}")
     if sender_filters:
-        sender_clause = " OR ".join(f"from:{sender}" for sender in sender_filters)
-        parts.append(f"({sender_clause})")
+        normalized_senders = []
+        for sender in sender_filters:
+            cleaned_sender = sender.strip()
+            if not cleaned_sender:
+                continue
+            escaped_sender = cleaned_sender.replace('"', '\\"')
+            normalized_senders.append(f'from:"{escaped_sender}"')
+        if normalized_senders:
+            sender_clause = " OR ".join(normalized_senders)
+            parts.append(f"({sender_clause})")
     return " ".join(parts)
 
 
